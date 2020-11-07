@@ -71,6 +71,7 @@ add_compile_options(
     -Wall
     -Werror=return-type -Werror=format
     $<$<COMPILE_LANGUAGE:C>:-Werror=implicit-function-declaration>
+    $<$<COMPILE_LANGUAGE:C>:-Werror=incompatible-pointer-types>
 )
 
 add_link_options(
