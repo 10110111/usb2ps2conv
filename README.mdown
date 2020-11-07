@@ -1,0 +1,79 @@
+# USB keyboard to PS/2 port converter
+
+## Overview
+
+This project is the firmware part of the device that converts the USB signaling of modern PS/2-incapable keyboards to the protocol of PS/2 keyboard port. This is the opposite of the common converters that let one attach an old keyboard to a modern USB-only computer (e.g. laptop).
+
+### Limitations
+ * LEDs are not controlled yet
+ * Only boot protocol is supported. This implies that
+   * Multimedia keys don't work,
+   * No more than 6 keys can be detected simultaneously (aside from modifiers).
+
+### Rationale for pin choice
+
+The project was developed on the `STM32F401C-DISCO` board, so the PS/2 wires are mapped to the GPIO and power pins that are closest together and not used by other peripherals on the board.
+
+## How to use
+
+The complete converter consists of a hardware component (that needs to be built) programmed by specific firmware (this project). After you build the converter, you'll get the USB port where the keyboard can be connected, and the PS/2 connector to connect to the computer.
+
+### Hardware
+
+These instructions are assuming the `STM32F401C-DISCO` board, on which this project was developed. If you use another one, adapt the instructions to your needs.
+
+To get your converter, you'll need:
+
+* A board with `STM32F401VCT6` controller, e.g. `STM32F401C-DISCO`,
+* two 10k resistors,
+* a cable with PS/2 male connector (e.g. cut from an old/broken PS/2 keyboard),
+* USB OTG cable with micro-USB device connector,
+* some way to attach the cable and the resistors to the board pins (e.g. soldering kit, or single-pin DuPont connectors),
+* optional: USB-UART dongle (to see debug output).
+
+Having obtained the required components, connect them as follows:
+
+ * One resistor from 5V to PE6,
+ * another resistor from 5V to PC13,
+ * 5V wire of the cable to 5V pin on the board,
+ * GND wire to GND pin,
+ * CLK wire to PC13,
+ * DATA wire to PE6,
+ * USB OTG cable to the USB USER port.
+
+If you use the `STM32F401C-DISCO` board, you can connect resistors on one side, and the PS/2 wires on the other.
+
+If you want to see debug output, connect the USB-UART dongle as follows:
+
+ * Rx on the dongle to PC6 on the board,
+ * GND to GND.
+
+### Firmware
+
+#### Building
+
+To build the firmware, you'll need:
+
+ * `arm-none-eabi` toolchain (on Debian/Ubuntu the package is called `gcc-arm-none-eabi`);
+ * `st-flash` utility (on Debian/Ubuntu it's available in package `stlink-tools`). Make sure that the version of the package is 1.6.0, not ~1.6.1~: the latter is broken and may give errors.
+
+Once you have the needed tools, issue in the command line (where `/path/to/the/source` is the path where you cloned the source tree of this project):
+```sh
+cd /path/to/the/source
+mkdir build && cd build
+cmake ..
+make
+```
+
+This yields the firmware binary `usb2ps2conv.bin`.
+
+#### Flashing
+
+To write the firmware built into the controller's flash, connect the board to the computer using the ST-LINK USB connector, and issue
+```sh
+make flash
+```
+
+#### Tweaking
+
+If you use a board different from `STM32F401C-DISCO`, you'll likely want to change the pins used. These can be changed in the source file `ps2-kbd-emulator.cpp`, in the definitions `DATA_GPIO_LETTER`, `DATA_PIN_NUM`, `CLK_GPIO_LETTER`, `CLK_PIN_NUM`. The default values are E,6 and C,13, respectively, which means pins PE6 and C13. To change Tx USART pin for the debug output, see the file `dbg-out.c` for the definition of `DBG_USART_NUM`, `DBG_USART_TX_GPIO_LETTER` and `DBG_USART_TX_PIN_NUM`.
