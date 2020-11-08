@@ -184,8 +184,7 @@ const struct ScanCode scanCodes[KEY_MAX] =
     [KEY_SELECT]                            = {{0,},                  {0,}},
     [KEY_CLEAR]                             = {{0,},                  {0,}},
 
-// FIXME: what PS/2 scan codes should these keys send? They are present on Logitech Y-RJ20 near LShift and above RShift.
-    [KEY_NONUS_BACK_SLASH_VERTICAL_BAR]     = {{0,},                  {0,}},
+    [KEY_NONUS_BACK_SLASH_VERTICAL_BAR]     = {{1,0x61},              {2,0xF0,0x61}},
 };
 
 const uint8_t* keyToMakeCode(unsigned key, bool ctrl, bool shift, bool alt, bool numLockLED, bool autorepeat)
