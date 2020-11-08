@@ -17,9 +17,9 @@ enum class State : uint8_t
 static volatile State usbState = State::Idle;
 static volatile State processingState = State::Idle;
 
-void USBH_UserProcess(USBH_HandleTypeDef* phost, uint8_t id)
+void USBH_UserProcess(USBH_HandleTypeDef* phost, uint8_t event)
 {
-    switch(id)
+    switch(event)
     {
     case HOST_USER_CONNECTION:
         printf("USB device connected\n");
@@ -57,6 +57,7 @@ void USBH_UserProcess(USBH_HandleTypeDef* phost, uint8_t id)
         ledOn(LED_GREEN);
         break;
     default:
+        printf("Unknown USB event %u\n", (unsigned)event);
         ledsOff();
         ledOn(LED_RED);
         ledOn(LED_ORANGE);
