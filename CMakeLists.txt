@@ -7,6 +7,11 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "Build type (defaults to MinSizeRel)" FORCE)
 endif()
 
+option(ENABLE_LED "Enable status indication via the 4 LEDs on the Discovery board" ON)
+if(ENABLE_LED)
+    add_definitions(-DENABLE_LED)
+endif()
+
 set(sources
     src/led.c
     src/main.cpp
