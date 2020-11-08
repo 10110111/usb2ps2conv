@@ -23,14 +23,14 @@ typedef struct
 {
     unsigned long leds;
     bool ctrl, shift, alt;
+    bool ledsUpdated;
 } EmulatedKeyboardState;
-EmulatedKeyboardState emuState = {.leds=0, .ctrl=false, .shift=false, .alt=false};
+EmulatedKeyboardState emuState = {.leds=0, .ctrl=false, .shift=false, .alt=false, .ledsUpdated=false};
 
 void setUSBKeyboardLEDs(uint8_t leds)
 {
-    // TODO: light them up on the USB keyboard
-
     emuState.leds=leds;
+    emuState.ledsUpdated=true;
 }
 
 void processUSBKeyboardEvent(const uint8_t key, const KeyState state)
@@ -109,8 +109,59 @@ void keyReleased(const uint8_t key)
     processUSBKeyboardEvent(key, KS_UP);
 }
 
+static void doSetLEDs(USBH_HandleTypeDef *phost)
+{
+    enum
+    {
+        PS2_SCROLL_LOCK=1,
+        PS2_NUM_LOCK   =2,
+        PS2_CAPS_LOCK  =4,
+    };
+    enum
+    {
+        HID_NUM_LOCK   =1,
+        HID_CAPS_LOCK  =2,
+        HID_SCROLL_LOCK=4,
+    };
+
+    uint8_t state=0;
+    if(emuState.leds & PS2_SCROLL_LOCK)
+        state |= HID_SCROLL_LOCK;
+    if(emuState.leds & PS2_NUM_LOCK)
+        state |= HID_NUM_LOCK;
+    if(emuState.leds & PS2_CAPS_LOCK)
+        state |= HID_CAPS_LOCK;
+
+    enum
+    {
+        REPORT_INPUT=0x01,
+        REPORT_OUTPUT=0x02,
+        REPORT_FEATURE=0x03,
+    };
+
+    printf("Setting LEDs: NUM %s, CAPS %s, SCROLL %s\n",
+           state & HID_NUM_LOCK ? "on" : "off",
+           state & HID_CAPS_LOCK ? "on" : "off",
+           state & HID_SCROLL_LOCK ? "on" : "off");
+
+    USBH_StatusTypeDef result;
+    do
+    {
+        result=USBH_HID_SetReport(phost, REPORT_OUTPUT, 0, &state, 1);
+    }
+    while(result==USBH_BUSY);
+    if(result!=USBH_OK)
+        printf("Failed to Set_Report: error %u\n", (unsigned)result);
+}
+
 void HID_Keybd_UserProcess(USBH_HandleTypeDef *phost)
 {
+    if(emuState.ledsUpdated)
+    {
+        doSetLEDs(phost);
+        emuState.ledsUpdated=false;
+    }
+
     HID_HandleTypeDef*const hidHandle = (HID_HandleTypeDef*)phost->pActiveClass->pData;
     USBKeyboardReport report;
     if(USBH_HID_FifoRead(&hidHandle->fifo, &report, hidHandle->length) !=  hidHandle->length)
