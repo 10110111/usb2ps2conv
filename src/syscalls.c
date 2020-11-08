@@ -3,7 +3,9 @@
 #include "syscalls.h"
 #include "led.h"
 
+#ifdef ENABLE_DEBUG_OUTPUT
 extern UART_HandleTypeDef uartDbgHandle;
+#endif
 int __errno;
 
 int _kill(int pid, int sig)
@@ -73,7 +75,9 @@ caddr_t _sbrk_r(struct _reent *r, int incr)
 
 int _write(int file, char *ptr, int len)
 {
+#ifdef ENABLE_DEBUG_OUTPUT
     HAL_UART_Transmit(&uartDbgHandle, (uint8_t*)ptr, len, 5000);
+#endif
     return len;
 }
 

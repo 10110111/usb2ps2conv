@@ -12,6 +12,11 @@ if(ENABLE_LED)
     add_definitions(-DENABLE_LED)
 endif()
 
+option(ENABLE_DEBUG_OUTPUT "Enable debug output via USART6" OFF)
+if(ENABLE_DEBUG_OUTPUT)
+    add_definitions(-DENABLE_DEBUG_OUTPUT)
+endif()
+
 set(sources
     src/led.c
     src/main.cpp
