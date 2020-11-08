@@ -86,3 +86,10 @@ make flash
 #### Tweaking
 
 If you use a board different from `STM32F401C-DISCO`, you'll likely want to change the pins used. These can be changed in the source file `ps2-kbd-emulator.cpp`, in the definitions `DATA_GPIO_LETTER`, `DATA_PIN_NUM`, `CLK_GPIO_LETTER`, `CLK_PIN_NUM`. The default values are E,6 and C,13, respectively, which means pins PE6 and C13. To change Tx USART pin for the debug output, see the file `dbg-out.c` for the definition of `DBG_USART_NUM`, `DBG_USART_TX_GPIO_LETTER` and `DBG_USART_TX_PIN_NUM`.
+
+## References
+
+1. Adam Chapweske, ["The PS/2 Mouse/Keyboard Protocol"](https://www.avrfreaks.net/sites/default/files/PS2%20Keyboard.pdf)
+1. Łukasz Podkalicki, ["Examples for stm32f401vct6u (STM32F401xC, 84MHz CPU / 256kB Flash). MCU of STM32 family based on the ARM® Cortex®‑M processor"](https://github.com/lpodkalicki/stm32f401vct6u)
+1. USB-IF, ["Device Class Definition for HID 1.11"](https://www.usb.org/document-library/device-class-definition-hid-111)
+1. USB-IF, ["HID Usage Tables 1.21"](https://www.usb.org/document-library/hid-usage-tables-121)
