@@ -5,7 +5,6 @@
 This project is the firmware part of the device that converts the USB signaling of modern PS/2-incapable keyboards to the protocol of PS/2 keyboard port. This is the opposite of the common converters that let one attach an old keyboard to a modern USB-only computer (e.g. laptop).
 
 ### Limitations
- * LEDs are not controlled yet
  * Only boot protocol is supported. This implies that
    * Multimedia keys don't work,
    * No more than 6 keys can be detected simultaneously (aside from modifiers).
