@@ -17,6 +17,16 @@ The project was developed on the `STM32F401C-DISCO` board, so the PS/2 wires are
 
 The complete converter consists of a hardware component (that needs to be built) programmed by specific firmware (this project). After you build the converter, you'll get the USB port where the keyboard can be connected, and the PS/2 connector to connect to the computer.
 
+Current status is indicated by the 4 LEDs on the Discovery board. This can be disabled (e.g. if you want to free up corresponding pins on your custom board) by passing `-DENABLE_LED=OFF` to CMake. Status codes are as follows:
+
+ * all 4 LEDs off: no device connected, no error detected;
+ * all 4 LEDs on: firmware aborted due to some unexpected error, the chip needs to be reset (e.g. using the _Reset_ button on the board);
+ * green LED on: keyboard connected and successfully configured;
+ * red LED on: unrecovered USB error, try re-plugging the USB device;
+ * combinations of 2 or 3 LEDs: intermediate states of configuring the USB device attached.
+
+Debug output via USART can be enabled by passing `-DENABLE_DEBUG_OUTPUT=ON` to CMake.
+
 ### Hardware
 
 These instructions are assuming the `STM32F401C-DISCO` board, on which this project was developed. If you use another one, adapt the instructions to your needs.
@@ -42,7 +52,7 @@ Having obtained the required components, connect them as follows:
 
 If you use the `STM32F401C-DISCO` board, you can connect resistors on one side, and the PS/2 wires on the other.
 
-If you want to see debug output, connect the USB-UART dongle as follows:
+If you want to see debug output (don't forget to enable it in CMake config), connect the USB-UART dongle as follows:
 
  * Rx on the dongle to PC6 on the board,
  * GND to GND.
