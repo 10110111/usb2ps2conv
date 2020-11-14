@@ -677,14 +677,7 @@ USBH_StatusTypeDef USBH_HID_SetProtocol(USBH_HandleTypeDef *phost,
                                          | USB_REQ_TYPE_CLASS;
 
   phost->Control.setup.b.bRequest = USB_HID_SET_PROTOCOL;
-  if (protocol)
-  {
-    phost->Control.setup.b.wValue.w = 0U;
-  }
-  else
-  {
-    phost->Control.setup.b.wValue.w = 1U;
-  }
+  phost->Control.setup.b.wValue.w = protocol;
 
   phost->Control.setup.b.wIndex.w = 0U;
   phost->Control.setup.b.wLength.w = 0U;
