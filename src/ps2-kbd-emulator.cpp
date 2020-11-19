@@ -589,6 +589,8 @@ void PS2_Process()
                 {
                 case CMD_SET_TYPEMATIC_RATE:
                     stateToGoToAfterAck=KeyboardState::WaitingForCommands;
+                    autorepeatPeriodInTicks = repeatRatePeriodsInTicks[arg&0x1f];
+                    autorepeatDelayInTicks  = repeatDelaysInTicks[arg>>6];
                     break;
                 case CMD_SET_SCAN_CODE_SET:
                     // Ignore, we only support set 2
