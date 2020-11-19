@@ -240,6 +240,12 @@ const uint8_t* keyToMakeCode(unsigned key, bool ctrl, bool shift, bool alt, bool
     SHIFT_NUMLOCK_DEPENDENT_MAKE_CODE(KEY_DELETE,0x71)
     SHIFT_NUMLOCK_DEPENDENT_MAKE_CODE(KEY_KEYPAD_SLASH,0x4A)
     case KEY_PAUSE:
+        if(autorepeat)
+        {
+            static const uint8_t code[]={0};
+            return code;
+        }
+
         if(ctrl)
         {
             static const uint8_t code[]={5, 0xE0,0x7E,0xE0,0xF0,0x7E};
