@@ -56,6 +56,55 @@ enum Reply
     REPLY_ID_BYTE_1=0x83,
 };
 
+static constexpr uint32_t repeatRatePeriodsInTicks[]=
+{
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE / 30.0),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE / 26.7),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE / 24.0),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE / 21.8),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE / 20.7),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE / 18.5),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE / 17.1),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE / 16.0),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE / 15.0),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE / 13.3),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE / 12.0),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE / 10.9),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE / 10.0),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  9.2),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  8.6),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  8.0),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  7.5),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  6.7),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  6.0),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  5.5),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  5.0),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  4.6),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  4.3),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  4.0),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  3.7),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  3.3),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  3.0),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  2.7),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  2.5),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  2.3),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  2.1),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE /  2.0),
+};
+static_assert(sizeof repeatRatePeriodsInTicks / sizeof repeatRatePeriodsInTicks[0]==0x20);
+
+static constexpr uint32_t repeatDelaysInTicks[]=
+{
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE * 0.25),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE * 0.50),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE * 0.75),
+    uint32_t(0.5 + QUADRUPLE_CLK_RATE * 1.00),
+};
+static_assert(sizeof repeatDelaysInTicks / sizeof repeatDelaysInTicks[0]==4);
+
+volatile uint32_t autorepeatTickCounter=0;
+uint32_t autorepeatPeriodInTicks=repeatRatePeriodsInTicks[0x0B];
+uint32_t autorepeatDelayInTicks =repeatDelaysInTicks[1];
 volatile bool kbdEnabled=true;
 volatile bool kbdBusy=true; // Busy by default until we enter main loop
 uint8_t lastSentByte=0xAA;
@@ -400,6 +449,8 @@ extern "C" void TIM3_IRQHandler()
 {
     busDriver.handleISR();
     TIM3->SR &= ~TIM_IT_UPDATE;
+
+    ++autorepeatTickCounter;
 }
 
 static void setLEDs(uint8_t state)

@@ -14,6 +14,14 @@ void emitScanCode(const uint8_t* code)
 
 typedef enum
 {
+    TM_IDLE,
+    TM_DELAY,
+    TM_REPEAT,
+} TypematicMode;
+TypematicMode typematicMode=TM_IDLE;
+
+typedef enum
+{
     KS_UP,
     KS_DOWN,
     KS_AUTOREPEAT,
@@ -79,6 +87,7 @@ typedef struct
 
 #define KEY_BUF_SIZE (6+8) // 6 for keys[], 8 for the ones in the bitmap
 static uint8_t pressedKeysUSB[KEY_BUF_SIZE];
+static uint8_t lastPressedKey;
 
 void addPressedKey(uint8_t *keys, const uint8_t key)
 {
@@ -91,14 +100,31 @@ void addPressedKey(uint8_t *keys, const uint8_t key)
     }
 }
 
+void startTypematicDelay()
+{
+    autorepeatTickCounter=0;
+    typematicMode=TM_DELAY;
+}
+
 void keyPressed(const uint8_t key)
 {
+    lastPressedKey=key;
+    startTypematicDelay();
+
     addPressedKey(pressedKeysUSB, key);
     processUSBKeyboardEvent(key, KS_DOWN);
 }
 
+void keyRepeated(const uint8_t key)
+{
+    processUSBKeyboardEvent(key, KS_AUTOREPEAT);
+}
+
 void keyReleased(const uint8_t key)
 {
+    lastPressedKey=0;
+    typematicMode=TM_IDLE;
+
     for(unsigned n=0; n<KEY_BUF_SIZE; ++n)
     {
         if(pressedKeysUSB[n]!=key)
@@ -164,43 +190,62 @@ void HID_Keybd_UserProcess(USBH_HandleTypeDef *phost)
 
     HID_HandleTypeDef*const hidHandle = (HID_HandleTypeDef*)phost->pActiveClass->pData;
     USBKeyboardReport report;
-    if(USBH_HID_FifoRead(&hidHandle->fifo, &report, hidHandle->length) !=  hidHandle->length)
-        return;
-
-    printf("Keyboard report: 0x%08lx%08lx\n", ((uint32_t*)&report)[1], *(uint32_t*)&report);
-
-    uint8_t currentPressedKeys[KEY_BUF_SIZE]={0};
-    memcpy(&currentPressedKeys, report.keys, sizeof report.keys);
-    if(report.lctrl)
-        addPressedKey(currentPressedKeys, KEY_LEFTCONTROL);
-    if(report.lshift)
-        addPressedKey(currentPressedKeys, KEY_LEFTSHIFT);
-    if(report.lalt)
-        addPressedKey(currentPressedKeys, KEY_LEFTALT);
-    if(report.lgui)
-        addPressedKey(currentPressedKeys, KEY_LEFT_GUI);
-    if(report.rctrl)
-        addPressedKey(currentPressedKeys, KEY_RIGHTCONTROL);
-    if(report.rshift)
-        addPressedKey(currentPressedKeys, KEY_RIGHTSHIFT);
-    if(report.ralt)
-        addPressedKey(currentPressedKeys, KEY_RIGHTALT);
-    if(report.rgui)
-        addPressedKey(currentPressedKeys, KEY_RIGHT_GUI);
-
-    for(unsigned n=0; n<KEY_BUF_SIZE; ++n)
+    if(USBH_HID_FifoRead(&hidHandle->fifo, &report, hidHandle->length) ==  hidHandle->length)
     {
-        const uint8_t currentKey=currentPressedKeys[n];
-        if(!memchr(pressedKeysUSB, currentKey, KEY_BUF_SIZE))
-            keyPressed(currentKey);
+        printf("Keyboard report: 0x%08lx%08lx\n", ((uint32_t*)&report)[1], *(uint32_t*)&report);
+
+        uint8_t currentPressedKeys[KEY_BUF_SIZE]={0};
+        memcpy(&currentPressedKeys, report.keys, sizeof report.keys);
+        if(report.lctrl)
+            addPressedKey(currentPressedKeys, KEY_LEFTCONTROL);
+        if(report.lshift)
+            addPressedKey(currentPressedKeys, KEY_LEFTSHIFT);
+        if(report.lalt)
+            addPressedKey(currentPressedKeys, KEY_LEFTALT);
+        if(report.lgui)
+            addPressedKey(currentPressedKeys, KEY_LEFT_GUI);
+        if(report.rctrl)
+            addPressedKey(currentPressedKeys, KEY_RIGHTCONTROL);
+        if(report.rshift)
+            addPressedKey(currentPressedKeys, KEY_RIGHTSHIFT);
+        if(report.ralt)
+            addPressedKey(currentPressedKeys, KEY_RIGHTALT);
+        if(report.rgui)
+            addPressedKey(currentPressedKeys, KEY_RIGHT_GUI);
+
+        for(unsigned n=0; n<KEY_BUF_SIZE; ++n)
+        {
+            const uint8_t currentKey=currentPressedKeys[n];
+            if(!memchr(pressedKeysUSB, currentKey, KEY_BUF_SIZE))
+                keyPressed(currentKey);
+        }
+
+        for(unsigned n=0; n<KEY_BUF_SIZE; ++n)
+        {
+            const uint8_t oldKey=pressedKeysUSB[n];
+            if(!memchr(currentPressedKeys, oldKey, KEY_BUF_SIZE))
+                keyReleased(oldKey);
+        }
+        memcpy(pressedKeysUSB, currentPressedKeys, KEY_BUF_SIZE);
     }
 
-    for(unsigned n=0; n<KEY_BUF_SIZE; ++n)
+    switch(typematicMode)
     {
-        const uint8_t oldKey=pressedKeysUSB[n];
-        if(!memchr(currentPressedKeys, oldKey, KEY_BUF_SIZE))
-            keyReleased(oldKey);
+    case TM_IDLE:
+        break;
+    case TM_DELAY:
+        if(autorepeatTickCounter > autorepeatDelayInTicks)
+        {
+            typematicMode=TM_REPEAT;
+            autorepeatTickCounter=0;
+        }
+        break;
+    case TM_REPEAT:
+        if(lastPressedKey && autorepeatTickCounter > autorepeatPeriodInTicks)
+        {
+            autorepeatTickCounter=0;
+            keyRepeated(lastPressedKey);
+        }
+        break;
     }
-
-    memcpy(pressedKeysUSB, currentPressedKeys, KEY_BUF_SIZE);
 }
