@@ -218,7 +218,7 @@ const uint8_t* keyToMakeCode(unsigned key, bool ctrl, bool shift, bool alt, bool
             static const uint8_t code[]={1, 0x84};
             return code;
         }
-        else if(ctrl||shift)
+        else if(ctrl||shift||autorepeat)
         {
             static const uint8_t code[]={2, 0xE0,0x7C};
             return code;
