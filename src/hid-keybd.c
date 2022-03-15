@@ -165,10 +165,10 @@ static void doSetLEDs(USBH_HandleTypeDef *phost)
         REPORT_FEATURE=0x03,
     };
 
-    printf("Setting LEDs: NUM %s, CAPS %s, SCROLL %s\n",
-           state & HID_NUM_LOCK ? "on" : "off",
-           state & HID_CAPS_LOCK ? "on" : "off",
-           state & HID_SCROLL_LOCK ? "on" : "off");
+    USBH_UsrLog("Setting LEDs: NUM %s, CAPS %s, SCROLL %s",
+                state & HID_NUM_LOCK ? "on" : "off",
+                state & HID_CAPS_LOCK ? "on" : "off",
+                state & HID_SCROLL_LOCK ? "on" : "off");
 
     USBH_StatusTypeDef result;
     do
@@ -177,7 +177,7 @@ static void doSetLEDs(USBH_HandleTypeDef *phost)
     }
     while(result==USBH_BUSY);
     if(result!=USBH_OK)
-        printf("Failed to Set_Report: error %u\n", (unsigned)result);
+        USBH_UsrLog("Failed to Set_Report: error %u", (unsigned)result);
 }
 
 void HID_Keybd_UserProcess(USBH_HandleTypeDef *phost)
@@ -192,7 +192,7 @@ void HID_Keybd_UserProcess(USBH_HandleTypeDef *phost)
     USBKeyboardReport report;
     if(USBH_HID_FifoRead(&hidHandle->fifo, &report, hidHandle->length) ==  hidHandle->length)
     {
-        printf("Keyboard report: 0x%08lx%08lx\n", ((uint32_t*)&report)[1], *(uint32_t*)&report);
+        USBH_UsrLog("Keyboard report: 0x%08lx%08lx", ((uint32_t*)&report)[1], *(uint32_t*)&report);
 
         uint8_t currentPressedKeys[KEY_BUF_SIZE]={0};
         memcpy(&currentPressedKeys, report.keys, sizeof report.keys);

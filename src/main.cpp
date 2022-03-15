@@ -22,42 +22,42 @@ void USBH_UserProcess(USBH_HandleTypeDef* phost, uint8_t event)
     switch(event)
     {
     case HOST_USER_CONNECTION:
-        printf("USB device connected\n");
+        USBH_UsrLog("USB device connected");
         ledOn(LED_ORANGE);
         break;
     case HOST_USER_DISCONNECTION:
         usbState = State::Idle;
         processingState = State::Idle;
-        printf("USB device disconnected\n");
+        USBH_UsrLog("USB device disconnected");
         ledsOff();
         break;
     case HOST_USER_CLASS_ACTIVE:
         usbState = State::Ready;
-        printf("USB device ready\n");
+        USBH_UsrLog("USB device ready");
         ledsOff();
         ledOn(LED_GREEN);
         break;
     case HOST_USER_UNRECOVERED_ERROR:
         usbState = State::Error;
-        printf("Unrecovered USB error\n");
+        USBH_UsrLog("Unrecovered USB error");
         ledsOff();
         ledOn(LED_RED);
         break;
     case HOST_USER_SELECT_CONFIGURATION:
-        printf("Selecting USB configuration...\n");
+        USBH_UsrLog("Selecting USB configuration...");
         ledsOff();
         ledOn(LED_RED);
         ledOn(LED_ORANGE);
         ledOn(LED_GREEN);
         break;
     case HOST_USER_CLASS_SELECTED:
-        printf("USB class selected\n");
+        USBH_UsrLog("USB class selected");
         ledsOff();
         ledOn(LED_RED);
         ledOn(LED_GREEN);
         break;
     default:
-        printf("Unknown USB event %u\n", (unsigned)event);
+        USBH_UsrLog("Unknown USB event %u\n", (unsigned)event);
         ledsOff();
         ledOn(LED_RED);
         ledOn(LED_ORANGE);
@@ -74,15 +74,15 @@ void HID_UserProcess(USBH_HandleTypeDef *phost)
         hidType = USBH_HID_GetDeviceType(phost);
         if(hidType == HID_KEYBOARD)
         {
-            printf("Keyboard detected\n");
+            USBH_UsrLog("Keyboard detected");
             if(USBH_HID_KeybdInit(phost) != USBH_OK)
             {
-                printf("Failed to init keyboard\n");
+                USBH_UsrLog("Failed to init keyboard");
                 processingState = State::Error;
             }
         }
         else if(hidType == HID_MOUSE)
-            printf("USB mouse detected. We don't support mice.\n");
+            USBH_UsrLog("USB mouse detected. We don't support mice.");
         processingState = State::Ready;
         break;
     case State::Ready:
@@ -111,7 +111,7 @@ int main(void)
     USBH_RegisterClass(&hUSBHost, USBH_HID_CLASS);
     USBH_Start(&hUSBHost);
 
-    printf("USB-to-PS/2 keyboard converter initialized\n");
+    USBH_UsrLog("USB-to-PS/2 keyboard converter initialized");
 
     while(true)
     {

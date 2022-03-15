@@ -249,7 +249,7 @@ public:
 
     void sendByte(uint8_t byte)
     {
-        printf("sendByte(%02X)\n", (unsigned)byte);
+        USBH_UsrLog("sendByte(%02X)", (unsigned)byte);
         if(nextState!=State::WaitingForEvents || byteReceivedAvailable_)
         {
             sendingStatus_=TransmissionStatus::Interrupted;
@@ -549,7 +549,7 @@ void PS2_Process()
         // We succeed in any case. Just need to wait 500-750 ms before sending success code.
         BATStartTimeMs=HAL_GetTick();
         kbdState=KeyboardState::DelayBeforeBAT;
-        printf("Starting BAT...\n");
+        USBH_UsrLog("Starting BAT...");
         break;
     case KeyboardState::DelayBeforeBAT:
         if(HAL_GetTick() - BATStartTimeMs < DELAY_MS_BEFORE_SENDING_BAT_CODE)
@@ -559,7 +559,7 @@ void PS2_Process()
         autorepeatDelayInTicks =repeatDelaysInTicks[1];
         busDriver.sendByte(REPLY_BAT_SUCCESS);
         kbdState=KeyboardState::SendingBAT_WaitingForTransmissionEnd;
-        printf("Ending BAT...\n");
+        USBH_UsrLog("Ending BAT...");
         break;
     case KeyboardState::SendingBAT_WaitingForTransmissionEnd:
         if(!busDriver.isIdle())
@@ -567,7 +567,7 @@ void PS2_Process()
         kbdEnabled=true;
         kbdBusy=false;
         kbdState=KeyboardState::WaitingForCommands;
-        printf("BAT done\n");
+        USBH_UsrLog("BAT done");
         break;
     case KeyboardState::WaitingForCommands:
         kbdBusy=false;
@@ -581,7 +581,7 @@ void PS2_Process()
         {
             // Request to send detected, accept the command
             const auto byte=busDriver.getByteReceived();
-            printf("Got byte from host: %02X\n", (unsigned)byte);
+            USBH_UsrLog("Got byte from host: %02X", (unsigned)byte);
 
             if((lastCommand&0x80)!=0 && (byte&0x80)==0)
             {
@@ -597,18 +597,18 @@ void PS2_Process()
                     stateToGoToAfterAck=KeyboardState::WaitingForCommands;
                     autorepeatPeriodInTicks = repeatRatePeriodsInTicks[arg&0x1f];
                     autorepeatDelayInTicks  = repeatDelaysInTicks[arg>>6];
-                    printf("Handling CMD_SET_TYPEMATIC_RATE\n");
+                    USBH_UsrLog("Handling CMD_SET_TYPEMATIC_RATE");
                     break;
                 case CMD_SET_SCAN_CODE_SET:
                     // Ignore, we only support set 2
                     stateToGoToAfterAck=KeyboardState::WaitingForCommands;
-                    printf("CMD_SET_SCAN_CODE_SET is not supported, ignoring\n");
+                    USBH_UsrLog("CMD_SET_SCAN_CODE_SET is not supported, ignoring");
                     break;
                 case CMD_SET_LEDS:
                     // Got the Set LEDs command, send it to the real keyboard.
                     stateToGoToAfterAck=KeyboardState::SettingLEDs;
                     setLEDsCmdArg=arg;
-                    printf("Handling CMD_SET_LEDS\n");
+                    USBH_UsrLog("Handling CMD_SET_LEDS");
                     break;
                 }
                 return;
@@ -641,25 +641,25 @@ void PS2_Process()
             case CMD_RESET:
                 kbdState=KeyboardState::SendingACK;
                 stateToGoToAfterAck=KeyboardState::Initialization;
-                printf("Handling CMD_RESET\n");
+                USBH_UsrLog("Handling CMD_RESET");
                 break;
             case CMD_DISABLE:
                 kbdState=KeyboardState::SendingACK;
                 stateToGoToAfterAck=KeyboardState::DisablingKbd;
-                printf("Handling CMD_DISABLE\n");
+                USBH_UsrLog("Handling CMD_DISABLE");
                 break;
             case CMD_ENABLE:
                 kbdState=KeyboardState::SendingACK;
                 stateToGoToAfterAck=KeyboardState::EnablingKbd;
-                printf("Handling CMD_ENABLE\n");
+                USBH_UsrLog("Handling CMD_ENABLE");
                 break;
             case CMD_ECHO:
                 kbdState=KeyboardState::ReplyingWithEcho;
-                printf("Handling CMD_ECHO\n");
+                USBH_UsrLog("Handling CMD_ECHO");
                 break;
             case CMD_RESEND:
                 kbdState=KeyboardState::ResendingLastByte;
-                printf("Handling CMD_RESEND\n");
+                USBH_UsrLog("Handling CMD_RESEND");
                 break;
             case CMD_SET_KEY_TYPE_MAKE:
             case CMD_SET_KEY_TYPE_MAKE_BREAK:
@@ -673,7 +673,7 @@ void PS2_Process()
                 stateToGoToAfterAck=KeyboardState::WaitingForCommands;
                 break;
             default:
-                printf("Failed to interpret command %02X, resending last sent byte\n", (unsigned)cmd);
+                USBH_UsrLog("Failed to interpret command %02X, resending last sent byte", (unsigned)cmd);
                 kbdState=KeyboardState::ResendingLastByte;
                 break;
             }
@@ -734,7 +734,7 @@ void PS2_Process()
 
 void passByteToPS2(uint8_t data)
 {
-    printf("pass byte to PS/2: %02X\n", (unsigned)data);
+    USBH_UsrLog("pass byte to PS/2: %02X", (unsigned)data);
     // We get scan codes in the format {byteCount, byte1, byte2, ..., byteN}
 
     if(numBytesToReceiveInCurrentScanCode==0)
@@ -786,17 +786,17 @@ static void initPS2ClockTimer()
     tim.Init.AutoReloadPreload=TIM_AUTORELOAD_PRELOAD_DISABLE;
     if(HAL_TIM_Base_Init(&tim) != HAL_OK)
     {
-        printf("Failed to init PS/2 clock timer\n");
+        USBH_UsrLog("Failed to init PS/2 clock timer");
         abort();
     }
     else if(HAL_TIM_Base_Start_IT(&tim) != HAL_OK)
     {
-        printf("Failed to start PS/2 clock timer\n");
+        USBH_UsrLog("Failed to start PS/2 clock timer");
         abort();
     }
     else
     {
-        printf("PS/2 clock timer started\n");
+        USBH_UsrLog("PS/2 clock timer started");
     }
 }
 
