@@ -609,6 +609,7 @@ void PS2_Process()
                     stateToGoToAfterAck=KeyboardState::SettingLEDs;
                     setLEDsCmdArg=arg;
                     printf("Handling CMD_SET_LEDS\n");
+                    break;
                 }
                 return;
             }
