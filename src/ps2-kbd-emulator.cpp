@@ -554,6 +554,8 @@ void PS2_Process()
         if(HAL_GetTick() - BATStartTimeMs < DELAY_MS_BEFORE_SENDING_BAT_CODE)
             break;
         setLEDs(0);
+        autorepeatPeriodInTicks=repeatRatePeriodsInTicks[0x0B];
+        autorepeatDelayInTicks =repeatDelaysInTicks[1];
         busDriver.sendByte(REPLY_BAT_SUCCESS);
         kbdState=KeyboardState::SendingBAT_WaitingForTransmissionEnd;
         break;
