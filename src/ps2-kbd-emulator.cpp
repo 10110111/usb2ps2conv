@@ -688,13 +688,21 @@ void PS2_Process()
         kbdState=KeyboardState::SendingACK_WaitingForTransmissionEnd;
         break;
     case KeyboardState::SendingACK_WaitingForTransmissionEnd:
+    {
         if(!busDriver.isIdle())
             break;
-        if(busDriver.sendingStatus()==BusDriver::TransmissionStatus::Complete)
+        const auto status = busDriver.sendingStatus();
+        if(status==BusDriver::TransmissionStatus::Complete)
             kbdState=stateToGoToAfterAck;
         else
             kbdState=KeyboardState::WaitingForCommands;
+        USBH_UsrLog("ACK transmission %s", status==BusDriver::TransmissionStatus::Complete ? "complete" :
+                                           status==BusDriver::TransmissionStatus::Interrupted ? "interrupted":
+                                           status==BusDriver::TransmissionStatus::InProgress ? "in progress" :
+                                           status==BusDriver::TransmissionStatus::Failed ? "failed" :
+                                           "stopped with broken status");
         break;
+    }
     case KeyboardState::DisablingKbd:
         kbdEnabled=false;
         kbdState=KeyboardState::WaitingForCommands;
